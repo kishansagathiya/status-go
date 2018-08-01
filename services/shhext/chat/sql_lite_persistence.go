@@ -95,6 +95,10 @@ func (p *SqlLitePersistence) GetAnyPrivateBundle() (*Bundle, error) {
 
 	err := p.db.QueryRow(stmt).Scan(&bundleBytes)
 
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -156,6 +160,10 @@ func (s *SqlLitePersistence) GetAnySymmetricKey(identityKey *ecdsa.PublicKey) ([
 		crypto.CompressPubkey(identityKey),
 	).Scan(&key, &ephemeralBytes)
 
+	if err == sql.ErrNoRows {
+		return nil, nil, nil
+	}
+
 	if err != nil {
 		return nil, nil, err
 	}
@@ -183,6 +191,10 @@ func (s *SqlLitePersistence) GetSymmetricKey(identityKey *ecdsa.PublicKey, ephem
 		crypto.CompressPubkey(ephemeralKey),
 	).Scan(&key)
 
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -202,6 +214,9 @@ func (s *SqlLitePersistence) GetPrivateBundle(bundleID []byte) (*BundleContainer
 	bundle := &BundleContainer{}
 
 	err = stmt.QueryRow(bundleID).Scan(&bundleBytes)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
 
 	if err != nil {
 		return nil, err
@@ -227,6 +242,9 @@ func (s *SqlLitePersistence) GetPublicBundle(publicKey *ecdsa.PublicKey) (*Bundl
 	bundle := &Bundle{}
 
 	err = stmt.QueryRow(bundleID).Scan(&bundleBytes)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
 
 	if err != nil {
 		return nil, err
