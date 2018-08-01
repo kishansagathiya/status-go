@@ -38,6 +38,14 @@ func (s *SqlLitePersistenceTestSuite) TestPrivateBundle() {
 	key, err := crypto.GenerateKey()
 	s.NoError(err)
 
+	actualBundle, err := s.service.GetPrivateBundle([]byte("non-existing"))
+	s.NoErrorf(err, "It does not return an error if the bundle is not there")
+	s.Nil(actualBundle)
+
+	anyPrivateBundle, err := s.service.GetAnyPrivateBundle()
+	s.NoError(err)
+	s.Nil(anyPrivateBundle)
+
 	bundle, err := NewBundleContainer(key)
 	s.NoError(err)
 
@@ -46,12 +54,12 @@ func (s *SqlLitePersistenceTestSuite) TestPrivateBundle() {
 
 	bundleID := bundle.GetBundle().GetSignedPreKey()
 
-	actualBundle, err := s.service.GetPrivateBundle(bundleID)
+	actualBundle, err = s.service.GetPrivateBundle(bundleID)
 	s.NoError(err)
 
 	s.Equalf(true, proto.Equal(bundle, actualBundle), "It returns the same bundle")
 
-	anyPrivateBundle, err := s.service.GetAnyPrivateBundle()
+	anyPrivateBundle, err = s.service.GetAnyPrivateBundle()
 	s.NoError(err)
 
 	s.Equalf(true, proto.Equal(bundle.GetBundle(), anyPrivateBundle), "It returns the same bundle")
@@ -62,6 +70,10 @@ func (s *SqlLitePersistenceTestSuite) TestPublicBundle() {
 	key, err := crypto.GenerateKey()
 	s.NoError(err)
 
+	actualBundle, err := s.service.GetPublicBundle(&key.PublicKey)
+	s.NoErrorf(err, "It does not return an error if the bundle is not there")
+	s.Nil(actualBundle)
+
 	bundleContainer, err := NewBundleContainer(key)
 	bundle := bundleContainer.GetBundle()
 	s.NoError(err)
@@ -69,7 +81,7 @@ func (s *SqlLitePersistenceTestSuite) TestPublicBundle() {
 	err = s.service.AddPublicBundle(bundle)
 	s.NoError(err)
 
-	actualBundle, err := s.service.GetPublicBundle(&key.PublicKey)
+	actualBundle, err = s.service.GetPublicBundle(&key.PublicKey)
 	s.NoError(err)
 
 	s.Equalf(true, proto.Equal(bundle, actualBundle), "It returns the same bundle")
@@ -83,15 +95,24 @@ func (s *SqlLitePersistenceTestSuite) TestSymmetricKey() {
 	s.NoError(err)
 	symKey := []byte("hello")
 
+	actualKey, err := s.service.GetSymmetricKey(&identityKey.PublicKey, &ephemeralKey.PublicKey)
+	s.NoErrorf(err, "It does not return an error if the key is not there")
+	s.Nil(actualKey)
+
+	actualKey, actualEphemeralKey, err := s.service.GetAnySymmetricKey(&identityKey.PublicKey)
+	s.NoError(err)
+	s.Nil(actualKey)
+	s.Nil(actualEphemeralKey)
+
 	err = s.service.AddSymmetricKey(&identityKey.PublicKey, &ephemeralKey.PublicKey, symKey)
 	s.NoError(err)
 
-	actualKey, err := s.service.GetSymmetricKey(&identityKey.PublicKey, &ephemeralKey.PublicKey)
+	actualKey, err = s.service.GetSymmetricKey(&identityKey.PublicKey, &ephemeralKey.PublicKey)
 	s.NoError(err)
 
 	s.Equalf(symKey, actualKey, "It returns the same key")
 
-	actualKey, actualEphemeralKey, err := s.service.GetAnySymmetricKey(&identityKey.PublicKey)
+	actualKey, actualEphemeralKey, err = s.service.GetAnySymmetricKey(&identityKey.PublicKey)
 	s.NoError(err)
 
 	s.Equalf(symKey, actualKey, "It returns the same key")

@@ -1,15 +1,21 @@
 package chat
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/suite"
-	"github.com/syndtr/goleveldb/leveldb"
-	"github.com/syndtr/goleveldb/leveldb/storage"
 )
 
 var cleartext = []byte("hello")
+
+const (
+	aliceDBPath = "/tmp/alice.db"
+	aliceDBKey  = "alice"
+	bobDBPath   = "/tmp/bob.db"
+	bobDBKey    = "bob"
+)
 
 func TestEncryptionServiceTestSuite(t *testing.T) {
 	suite.Run(t, new(EncryptionServiceTestSuite))
@@ -17,33 +23,24 @@ func TestEncryptionServiceTestSuite(t *testing.T) {
 
 type EncryptionServiceTestSuite struct {
 	suite.Suite
-	alicedb *leveldb.DB
-	bobdb   *leveldb.DB
-	alice   *EncryptionService
-	bob     *EncryptionService
+	alice *EncryptionService
+	bob   *EncryptionService
 }
 
 func (s *EncryptionServiceTestSuite) SetupTest() {
-	alicedb, err := leveldb.Open(storage.NewMemStorage(), nil)
 
-	if err != nil {
-		panic(err)
-	}
-	bobdb, err := leveldb.Open(storage.NewMemStorage(), nil)
-
+	alicePersistence, err := NewSqlLitePersistence(aliceDBPath, aliceDBKey)
 	if err != nil {
 		panic(err)
 	}
 
-	s.alicedb = alicedb
-	s.bobdb = bobdb
-	s.alice = NewEncryptionService(NewPersistenceService(alicedb))
-	s.bob = NewEncryptionService(NewPersistenceService(bobdb))
-}
+	bobPersistence, err := NewSqlLitePersistence(bobDBPath, bobDBKey)
+	if err != nil {
+		panic(err)
+	}
 
-func (s *EncryptionServiceTestSuite) TearDownTest() {
-	s.NoError(s.alicedb.Close())
-	s.NoError(s.bobdb.Close())
+	s.alice = NewEncryptionService(alicePersistence)
+	s.bob = NewEncryptionService(bobPersistence)
 }
 
 // Alice sends Bob an encrypted message with DH using an ephemeral key
@@ -58,6 +55,7 @@ func (s *EncryptionServiceTestSuite) TestEncryptPayloadNoBundle() {
 
 	encryptionResponse1, err := s.alice.EncryptPayload(&bobKey.PublicKey, aliceKey, cleartext)
 	s.NoError(err)
+	fmt.Printf("%x\n", encryptionResponse1)
 
 	cyphertext1 := encryptionResponse1.Payload
 	ephemeralKey1 := encryptionResponse1.GetX3DHHeader().GetDhKey()
