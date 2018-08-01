@@ -235,7 +235,9 @@ func (api *PublicAPI) ConfirmMessagesProcessed(messages []*whisper.Message) erro
 }
 
 func (api *PublicAPI) SendPublicMessage(ctx context.Context, msg chat.SendPublicMessageRPC) (hexutil.Bytes, error) {
+	fmt.Printf("%s\n", msg.Sig)
 	privateKey, err := api.service.w.GetPrivateKey(msg.Sig)
+	fmt.Printf("%s\n", privateKey)
 	if err != nil {
 		return nil, err
 	}

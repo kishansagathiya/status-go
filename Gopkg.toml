@@ -151,3 +151,7 @@ ignored = [ "github.com/ethereum/go-ethereum/ethapi" ]
 [[constraint]]
   branch = "master"
   name = "github.com/status-im/rendezvous"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/status-im/doubleratchet"

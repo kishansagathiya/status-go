@@ -3,10 +3,12 @@ package chat
 import (
 	"crypto/ecdsa"
 	"errors"
+	"fmt"
 
 	ecrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/ecies"
 	"github.com/ethereum/go-ethereum/log"
+	dr "github.com/status-im/doubleratchet"
 
 	"github.com/status-im/status-go/services/shhext/chat/crypto"
 )
@@ -174,6 +176,8 @@ func buildX3DHHeader(e *EncryptionResponse) *X3DHHeader {
 			ephemeralKey,
 		}
 		message.BundleId = e.BundleID
+		m, _ := dr.DefaultCrypto{}.GenerateDH()
+		fmt.Printf("%x\n", m)
 	case EncryptionTypeSym:
 		message.EphemeralKey = &X3DHHeader_SymKey{
 			ephemeralKey,
