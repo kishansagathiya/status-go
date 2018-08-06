@@ -425,7 +425,14 @@ func (b *StatusBackend) SelectAccount(address, password string) error {
 		return err
 	}
 
-	return nil
+	st, err := b.statusNode.ShhExtService()
+	if err != nil {
+		return err
+	}
+
+	err = st.InitProtocol(address, password)
+
+	return err
 }
 
 // NotifyUsers sends push notifications to users.
