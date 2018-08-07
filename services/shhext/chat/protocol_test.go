@@ -1,13 +1,12 @@
 package chat
 
 import (
+	"os"
 	"testing"
 
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/suite"
-	"github.com/syndtr/goleveldb/leveldb"
-	"github.com/syndtr/goleveldb/leveldb/storage"
 )
 
 func TestProtocolServiceTestSuite(t *testing.T) {
@@ -16,33 +15,31 @@ func TestProtocolServiceTestSuite(t *testing.T) {
 
 type ProtocolServiceTestSuite struct {
 	suite.Suite
-	alicedb *leveldb.DB
-	bobdb   *leveldb.DB
-	alice   *ProtocolService
-	bob     *ProtocolService
+	alice *ProtocolService
+	bob   *ProtocolService
 }
 
 func (s *ProtocolServiceTestSuite) SetupTest() {
-	alicedb, err := leveldb.Open(storage.NewMemStorage(), nil)
+	aliceDBPath := "/tmp/alice.db"
+	aliceDBKey := "alice"
+	bobDBPath := "/tmp/bob.db"
+	bobDBKey := "bob"
 
+	os.Remove(aliceDBPath)
+	os.Remove(bobDBPath)
+
+	alicePersistence, err := NewSqlLitePersistence(aliceDBPath, aliceDBKey)
 	if err != nil {
 		panic(err)
 	}
-	bobdb, err := leveldb.Open(storage.NewMemStorage(), nil)
 
+	bobPersistence, err := NewSqlLitePersistence(bobDBPath, bobDBKey)
 	if err != nil {
 		panic(err)
 	}
 
-	s.alicedb = alicedb
-	s.bobdb = bobdb
-	s.alice = NewProtocolService(NewEncryptionService(NewPersistenceService(alicedb)))
-	s.bob = NewProtocolService(NewEncryptionService(NewPersistenceService(bobdb)))
-}
-
-func (s *ProtocolServiceTestSuite) TearDownTest() {
-	s.NoError(s.alicedb.Close())
-	s.NoError(s.bobdb.Close())
+	s.alice = NewProtocolService(NewEncryptionService(alicePersistence))
+	s.bob = NewProtocolService(NewEncryptionService(bobPersistence))
 }
 
 func (s *ProtocolServiceTestSuite) TestBuildDirectMessage() {

@@ -2,6 +2,7 @@ package chat
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/ethereum/go-ethereum/crypto"
@@ -9,13 +10,6 @@ import (
 )
 
 var cleartext = []byte("hello")
-
-const (
-	aliceDBPath = "/tmp/alice.db"
-	aliceDBKey  = "alice"
-	bobDBPath   = "/tmp/bob.db"
-	bobDBKey    = "bob"
-)
 
 func TestEncryptionServiceTestSuite(t *testing.T) {
 	suite.Run(t, new(EncryptionServiceTestSuite))
@@ -28,6 +22,13 @@ type EncryptionServiceTestSuite struct {
 }
 
 func (s *EncryptionServiceTestSuite) SetupTest() {
+	aliceDBPath := "/tmp/alice.db"
+	aliceDBKey := "alice"
+	bobDBPath := "/tmp/bob.db"
+	bobDBKey := "bob"
+
+	os.Remove(aliceDBPath)
+	os.Remove(bobDBPath)
 
 	alicePersistence, err := NewSqlLitePersistence(aliceDBPath, aliceDBKey)
 	if err != nil {
@@ -144,3 +145,16 @@ func (s *EncryptionServiceTestSuite) TestEncryptPayloadBundle() {
 	s.NoError(err)
 	s.Equalf(cleartext, decryptedPayload2, "It correctly decrypts the payload using a symmetric key")
 }
+
+// Alice has Bob's bundle
+// Alice sends Bob an encrypted message with X3DH using an ephemeral key
+// and Bob's bundle.
+// Alice sends another message. This message should be using a DR
+// and should include the initial x3dh message
+
+// Alice has Bob's bundle
+// Alice sends Bob an encrypted message with X3DH using an ephemeral key
+// and Bob's bundle.
+// Bob's reply with a DR message
+// Alice sends another message. This message should be using a DR
+// and should not include the initial x3dh message

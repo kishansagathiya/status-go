@@ -257,3 +257,7 @@ func (s *SqlLitePersistence) GetPublicBundle(publicKey *ecdsa.PublicKey) (*Bundl
 
 	return bundle, nil
 }
+
+func (s *SqlLitePersistence) GetRatchetInfo(*ecdsa.PublicKey) (*RatchetInfo, error) {
+	return nil, nil
+}
